@@ -52,6 +52,15 @@ size_t terminal_column;
 uint8_t terminal_color;
 uint16_t* terminal_buffer = (uint16_t*)VGA_MEMORY;
 
+void terminal_clear() {
+    for (size_t y = 0; y < VGA_HEIGHT; y++) {
+        for (size_t x = 0; x < VGA_WIDTH; x++) {
+            const size_t index = y * VGA_WIDTH + x;
+            terminal_buffer[index] = vga_entry(' ', terminal_color);
+        }
+    }
+}
+
 //Initialises the terminal
 void terminal_init() {
     terminal_row = 0;
@@ -119,19 +128,32 @@ void terminal_writestring(const char* data) {
     terminal_write(data, strlen(data));
 }
 
+void print_bear_logo() {
+    terminal_writestring("        .-. _,,,,,_ .-.\n");
+    terminal_writestring("       ( , ' :   : ' , )\n");
+    terminal_writestring("        /    :   :    \\\n");
+    terminal_writestring("       ;    0.---.0    ;\n");
+    terminal_writestring("        \\  /   _   \\  /\n");
+    terminal_writestring("         \\ |  (_)  | /\n");
+    terminal_writestring("       .\" `\\  -'-  /` \".\n");
+    terminal_writestring("      /     `\\\"\"\"\"\"`     \\\n");
+    terminal_writestring("     /   .'   .-== '.    \\\n");
+    terminal_writestring("    /   /       .-=='\\    \\\n");
+    terminal_writestring("   (   /              \\    )\n");
+    terminal_writestring("    '-;`.             .';-'\n");
+    terminal_writestring("     /_  `-.______ .-` __\\\n");
+    terminal_writestring("   /`  `\\  /      `\\  /   `\\\n");
+    terminal_writestring("   \\    | /         \\ |    /\n");
+    terminal_writestring("    `'--'`           `'--'`\n");
+}
+
+void bear() {
+    terminal_writestring("Welcome to BearOS!\n");
+    print_bear_logo();
+}
+
 void kernel_main() {
     terminal_init();
 
-    terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_MAGENTA, VGA_COLOUR_BLACK));
-    for (int i = 0; i < 100; i++) {
-        terminal_writestring("Hello, World!\n");
-        terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_GREEN, VGA_COLOUR_BLACK));
-        terminal_writestring("This is BearOS, a simple operating system kernel written in C.\n");
-        terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_BLUE, VGA_COLOUR_BLACK));
-        terminal_writestring("This kernel is running in 32-bit protected mode.\n");
-        terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_MAGENTA, VGA_COLOUR_BLACK));
-        for (int j = 0; j < 10000000; j++) {
-            // Simple delay loop to slow down the output
-        }
-    }
+    bear();
 }
