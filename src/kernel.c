@@ -34,7 +34,7 @@ static inline uint8_t vga_entry_colour(enum vga_colour fg, enum vga_colour bg) {
 
 //Combining the ASCII character and colour byte into a single 16-bit value
 static inline uint16_t vga_entry(unsigned char uc, uint8_t colour) {
-    return (uint16_t) uc | (uint16_t) colour << 8;
+    return (uint16_t) uc | ((uint16_t) colour << 8);
 }
 
 //Finds the length of a string. Needed to write to display
@@ -75,22 +75,37 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) {
     terminal_buffer[index] = vga_entry(c, color);
 }
 
-//Calls terminal_putentryat and advances the cursor position
+void terminal_scroll() {
+    for (size_t y = 1; y < VGA_HEIGHT; y++) {
+        for (size_t x = 0; x < VGA_WIDTH; x++) {
+            const size_t from_index = y * VGA_WIDTH + x;
+            const size_t to_index = (y - 1) * VGA_WIDTH + x;
+            terminal_buffer[to_index] = terminal_buffer[from_index];
+        }
+    }
+
+    size_t last_row = VGA_HEIGHT - 1;
+    for (size_t x = 0; x < VGA_WIDTH; x++) {
+        const size_t index = last_row * VGA_WIDTH + x;
+        terminal_buffer[index] = vga_entry(' ', terminal_color);
+    }
+}
+
 void terminal_putchar(char c) {
     if (c == '\n') {
         terminal_column = 0;
-        if (++terminal_row == VGA_HEIGHT) {
-            terminal_row = 0;
+        terminal_row++;
+    } 
+    else {
+        terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
+        if (++terminal_column == VGA_WIDTH) {
+            terminal_column = 0;
+            terminal_row++;
         }
-        return;
     }
-
-    terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-    if (++terminal_column == VGA_WIDTH) {
-        terminal_column = 0;
-        if (++terminal_row == VGA_HEIGHT) {
-            terminal_row = 0;
-        }
+    if (terminal_row >= VGA_HEIGHT) {
+        terminal_scroll();
+        terminal_row = VGA_HEIGHT - 1;
     }
 }
 
@@ -107,5 +122,16 @@ void terminal_writestring(const char* data) {
 void kernel_main() {
     terminal_init();
 
-    terminal_writestring("Woah\nthis is a kernel!\n");
+    terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_MAGENTA, VGA_COLOUR_BLACK));
+    for (int i = 0; i < 100; i++) {
+        terminal_writestring("Hello, World!\n");
+        terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_GREEN, VGA_COLOUR_BLACK));
+        terminal_writestring("This is BearOS, a simple operating system kernel written in C.\n");
+        terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_BLUE, VGA_COLOUR_BLACK));
+        terminal_writestring("This kernel is running in 32-bit protected mode.\n");
+        terminal_setcolor(vga_entry_colour(VGA_COLOUR_LIGHT_MAGENTA, VGA_COLOUR_BLACK));
+        for (int j = 0; j < 10000000; j++) {
+            // Simple delay loop to slow down the output
+        }
+    }
 }
